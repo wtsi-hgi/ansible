@@ -123,11 +123,8 @@ EXAMPLES = '''
         state: absent
 '''
 
-import sys
-
 try:
     import consul
-    from requests.exceptions import ConnectionError
     python_consul_installed = True
 except ImportError:
     python_consul_installed = False
@@ -140,8 +137,16 @@ except ImportError:
 
 from requests.exceptions import ConnectionError
 
-def execute(module):
 
+TEMPLATE = '''%s "%s" {
+  policy = "%s"
+}
+'''
+
+RULE_TYPES = ['key', 'service', 'event', 'query', 'agent', 'node']
+
+
+def execute(module):
     state = module.params.get('state')
 
     if state == 'present':
@@ -151,9 +156,7 @@ def execute(module):
 
 
 def update_acl(module):
-
     rules = module.params.get('rules')
-    state = module.params.get('state')
     token = module.params.get('token')
     token_type = module.params.get('token_type')
     mgmt = module.params.get('mgmt_token')
@@ -162,13 +165,11 @@ def update_acl(module):
     changed = False
 
     try:
-
         if token:
             existing_rules = load_rules_for_token(module, consul, token)
             supplied_rules = yml_to_rules(module, rules)
-            changed = not existing_rules == supplied_rules
+            changed = existing_rules != supplied_rules
             if changed:
-                y = supplied_rules.to_hcl()
                 token = consul.acl.update(
                     token,
                     name=name,
@@ -200,7 +201,6 @@ def update_acl(module):
 
 
 def remove_acl(module):
-    state = module.params.get('state')
     token = module.params.get('token')
     mgmt = module.params.get('mgmt_token')
 
@@ -211,9 +211,10 @@ def remove_acl(module):
 
     module.exit_json(changed=changed, token=token)
 
+
 def load_rules_for_token(module, consul_api, token):
     try:
-        rules = Rules()
+        rules = RuleCollection()
         info = consul_api.acl.info(token)
         if info and info['Rules']:
             rule_set = hcl.loads(to_ascii(info['Rules']))
@@ -226,42 +227,35 @@ def load_rules_for_token(module, consul_api, token):
             msg="Could not load rule list from retrieved rule data %s, %s" % (
                 token, e))
 
-    return json_to_rules(module, loaded)
 
 def to_ascii(unicode_string):
     if isinstance(unicode_string, unicode):
         return unicode_string.encode('ascii', 'ignore')
     return unicode_string
 
+
 def yml_to_rules(module, yml_rules):
-    rules = Rules()
+    rules = RuleCollection()
     if yml_rules:
         for rule in yml_rules:
-            if ('key' in rule and 'policy' in rule):
+            if 'key' in rule and 'policy' in rule:
                 rules.add_rule('key', Rule(rule['key'], rule['policy']))
-            elif ('service' in rule and 'policy' in rule):
+            elif 'service' in rule and 'policy' in rule:
                 rules.add_rule('service', Rule(rule['service'], rule['policy']))
-            elif ('event' in rule and 'policy' in rule):
+            elif 'event' in rule and 'policy' in rule:
                 rules.add_rule('event', Rule(rule['event'], rule['policy']))
-            elif ('query' in rule and 'policy' in rule):
+            elif 'query' in rule and 'policy' in rule:
                 rules.add_rule('query', Rule(rule['query'], rule['policy']))
-            elif ('agent' in rule and 'policy' in rule):
+            elif 'agent' in rule and 'policy' in rule:
                 rules.add_rule('agent', Rule(rule['agent'], rule['policy']))
-            elif ('node' in rule and 'policy' in rule):
+            elif 'node' in rule and 'policy' in rule:
                 rules.add_rule('node', Rule(rule['node'], rule['policy']))
             else:
                 module.fail_json(msg="a rule requires a key/service/event/query/agent or node and a policy.")
     return rules
 
-template = '''%s "%s" {
-  policy = "%s"
-}
-'''
 
-RULE_TYPES = ['key', 'service', 'event', 'query', 'agent', 'node']
-
-class Rules:
-
+class RuleCollection:
     def __init__(self):
         self.rules = {}
         for rule_type in RULE_TYPES:
@@ -274,11 +268,10 @@ class Rules:
         return len(self) > 0
 
     def to_hcl(self):
-
         rules = ""
         for rule_type in RULE_TYPES:
             for pattern, rule in self.rules[rule_type].items():
-                rules += template % (rule_type, pattern, rule.policy)
+                rules += TEMPLATE % (rule_type, pattern, rule.policy)
         return to_ascii(rules)
 
     def __len__(self):
@@ -294,7 +287,7 @@ class Rules:
 
         for rule_type in RULE_TYPES:
             for name, other_rule in other.rules[rule_type].items():
-                if not name in self.rules[rule_type]:
+                if name not in self.rules[rule_type]:
                     return False
                 rule = self.rules[rule_type][name]
 
@@ -305,8 +298,8 @@ class Rules:
     def __str__(self):
         return self.to_hcl()
 
-class Rule:
 
+class Rule:
     def __init__(self, pattern, policy):
         self.pattern = pattern
         self.policy = policy
@@ -322,6 +315,7 @@ class Rule:
     def __str__(self):
         return '%s %s' % (self.pattern, self.policy)
 
+
 def get_consul_api(module, token=None):
     if not token:
         token = module.params.get('token')
@@ -331,14 +325,16 @@ def get_consul_api(module, token=None):
                          verify=module.params.get('validate_certs'),
                          token=token)
 
+
 def test_dependencies(module):
     if not python_consul_installed:
-        module.fail_json(msg="python-consul required for this module. "\
-              "see http://python-consul.readthedocs.org/en/latest/#installation")
+        module.fail_json(msg="python-consul required for this module. "
+                             "see http://python-consul.readthedocs.org/en/latest/#installation")
 
     if not pyhcl_installed:
-        module.fail_json( msg="pyhcl required for this module."\
-              " see https://pypi.python.org/pypi/pyhcl")
+        module.fail_json(msg="pyhcl required for this module. "
+                             "see https://pypi.python.org/pypi/pyhcl")
+
 
 def main():
     argument_spec = dict(
@@ -365,6 +361,7 @@ def main():
             module.params.get('host'), module.params.get('port'), str(e)))
     except Exception as e:
         module.fail_json(msg=str(e))
+
 
 # import module snippets
 from ansible.module_utils.basic import *
