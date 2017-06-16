@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+from collections import defaultdict
 
 ANSIBLE_METADATA = {'metadata_version': '1.0',
                     'status': ['preview'],
@@ -185,7 +186,7 @@ def update_acl(module):
 
     module.exit_json(changed=changed,
                      token=token,
-                     rules=hcl.loads(rules_as_hcl),
+                     rules=encode_rules_as_json(rules),
                      name=name,
                      type=token_type)
 
@@ -234,6 +235,19 @@ def encode_rule_as_hcl_string(rule):
     else:
         return '%s = "%s"\n' % (rule.scope, rule.policy)
 
+
+def encode_rules_as_json(rules):
+    rules_as_json = defaultdict(dict)
+    for rule in rules:
+        if rule.pattern is not None:
+            assert rule.pattern not in rules_as_json[rule.scope]
+            rules_as_json[rule.scope][rule.pattern] = {
+                "policy": rule.policy
+            }
+        else:
+            assert rule.scope not in rules_as_json
+            rules_as_json[rule.scope] = rule.policy
+    return rules_as_json
 
 
 def decode_rules_as_yml(module, rules_as_yml):
