@@ -16,12 +16,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-from collections import defaultdict
 
 ANSIBLE_METADATA = {'metadata_version': '1.0',
                     'status': ['preview'],
                     'supported_by': 'community'}
-
 
 DOCUMENTATION = """
 module: consul_acl
@@ -136,6 +134,7 @@ try:
 except ImportError:
     pyhcl_installed = False
 
+from collections import defaultdict
 from requests.exceptions import ConnectionError
 
 
