@@ -136,6 +136,7 @@ except ImportError:
 
 from collections import defaultdict
 from requests.exceptions import ConnectionError
+from ansible.module_utils.basic import to_text, AnsibleModule
 
 
 RULE_SCOPES = ['agent', 'event', 'key', 'keyring', 'node', 'operator', 'query', 'service', 'session']
@@ -364,7 +365,5 @@ def main():
         module.fail_json(msg=str(e))
 
 
-# import module snippets
-from ansible.module_utils.basic import *
 if __name__ == '__main__':
     main()
