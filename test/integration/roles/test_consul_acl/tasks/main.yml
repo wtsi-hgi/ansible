@@ -9,7 +9,7 @@
   assert:
     that:
       - new_ruleless.token | length == 36
-      - new_ruleless.name == 'New ACL'
+      - new_ruleless.rules == {}
 
 - name: add rules to an acl token
   consul_acl:
@@ -27,7 +27,6 @@
   assert:
     that:
       - with_rules.token | length == 36
-      - with_rules.name == 'With rule'
       - with_rules.rules | match('.*"foo".*')
       - with_rules.rules | search(pattern='private/foo')
 
