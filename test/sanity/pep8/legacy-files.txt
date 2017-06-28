@@ -50,7 +50,6 @@ lib/ansible/modules/cloud/amazon/elasticache.py
 lib/ansible/modules/cloud/amazon/elasticache_subnet_group.py
 lib/ansible/modules/cloud/amazon/execute_lambda.py
 lib/ansible/modules/cloud/amazon/iam.py
-lib/ansible/modules/cloud/amazon/iam_cert.py
 lib/ansible/modules/cloud/amazon/iam_policy.py
 lib/ansible/modules/cloud/amazon/iam_server_certificate_facts.py
 lib/ansible/modules/cloud/amazon/lambda.py
@@ -339,11 +338,6 @@ lib/ansible/modules/network/iosxr/iosxr_facts.py
 lib/ansible/modules/network/iosxr/iosxr_system.py
 lib/ansible/modules/net_tools/ipify_facts.py
 lib/ansible/modules/net_tools/ipinfoio_facts.py
-lib/ansible/modules/network/junos/_junos_template.py
-lib/ansible/modules/network/junos/junos_command.py
-lib/ansible/modules/network/junos/junos_config.py
-lib/ansible/modules/network/junos/junos_netconf.py
-lib/ansible/modules/network/junos/junos_package.py
 lib/ansible/modules/network/lenovo/cnos_conditional_template.py
 lib/ansible/modules/network/lenovo/cnos_template.py
 lib/ansible/modules/network/lenovo/cnos_vlan.py
@@ -394,14 +388,12 @@ lib/ansible/modules/network/nxos/nxos_system.py
 lib/ansible/modules/network/nxos/nxos_udld.py
 lib/ansible/modules/network/nxos/nxos_udld_interface.py
 lib/ansible/modules/network/nxos/nxos_user.py
-lib/ansible/modules/network/nxos/nxos_vpc_interface.py
 lib/ansible/modules/network/nxos/nxos_vrf.py
 lib/ansible/modules/network/nxos/nxos_vrf_interface.py
 lib/ansible/modules/network/nxos/nxos_vrrp.py
 lib/ansible/modules/network/nxos/nxos_vtp_domain.py
 lib/ansible/modules/network/nxos/nxos_vtp_password.py
 lib/ansible/modules/network/nxos/nxos_vtp_version.py
-lib/ansible/modules/network/nxos/nxos_vxlan_vtep.py
 lib/ansible/modules/network/nxos/nxos_vxlan_vtep_vni.py
 lib/ansible/modules/net_tools/omapi_host.py
 lib/ansible/modules/network/openswitch/_ops_template.py
@@ -546,7 +538,6 @@ lib/ansible/modules/system/puppet.py
 lib/ansible/modules/system/runit.py
 lib/ansible/modules/system/seboolean.py
 lib/ansible/modules/system/sefcontext.py
-lib/ansible/modules/system/selinux.py
 lib/ansible/modules/system/seport.py
 lib/ansible/modules/system/service.py
 lib/ansible/modules/system/solaris_zone.py
