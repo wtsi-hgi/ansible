@@ -1,5 +1,8 @@
 ---
 
+- fail:
+    msg: "Expect this failure"
+
 - import_tasks: create-acl-without-rules.yml
 
 - import_tasks: create-acl-with-rules.yml
