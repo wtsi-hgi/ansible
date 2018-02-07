@@ -4,6 +4,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
@@ -130,6 +131,11 @@ except ImportError:
     python_consul_installed = False
 
 from ansible.module_utils.basic import AnsibleModule
+import os
+
+
+_DISRUPTIVE_ENVIRONMENT_VARIABLES = ("CONSUL_HTTP_ADDR", "CONSUL_HTTP_TOKEN", "CONSUL_HTTP_SSL",
+                                     "CONSUL_HTTP_SSL_VERIFY")
 
 
 def execute(module):
@@ -221,12 +227,28 @@ def remove_value(module):
                      data=existing)
 
 
-def get_consul_api(module, token=None):
-    return consul.Consul(host=module.params.get('host'),
-                         port=module.params.get('port'),
-                         scheme=module.params.get('scheme'),
-                         verify=module.params.get('validate_certs'),
-                         token=module.params.get('token'))
+def get_consul_api(module):
+
+    # Disarm disruption variables, which `python-consul` will use instead of those we give it
+    # https://github.com/ansible/ansible/issues/35833
+    saved_environment = {}
+    for variable in _DISRUPTIVE_ENVIRONMENT_VARIABLES:
+        value = os.environ.get(variable)
+        if value is not None:
+            saved_environment[variable] = value
+            del os.environ[variable]
+
+    consul_client = consul.Consul(host=module.params.get('host'),
+                                  port=module.params.get('port'),
+                                  scheme=module.params.get('scheme'),
+                                  verify=module.params.get('validate_certs'),
+                                  token=module.params.get('token'))
+
+    # Re-instate disruptive variables
+    for variable, value in saved_environment.items():
+        os.environ[variable] = value
+
+    return consul_client
 
 
 def test_dependencies(module):
